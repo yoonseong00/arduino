@@ -1,0 +1,23 @@
+int hallPin = A2;     //홀 센서를A2핀에 연결
+int LEDpin = 13;      // LED 13번핀
+
+// 변수 설정
+int sensorReading;    // 아날로그 센서 값을 저장
+int voltage;          // 전압으로 변환된 값 저장
+
+void setup() {
+  pinMode(LEDpin, OUTPUT); // LED 출력모드
+  Serial.begin(9600); // 시리얼 통신 시작  
+}
+
+void loop() {
+  sensorReading = analogRead(hallPin);                // 센서의 아날로그값을 읽어 저장
+  
+  Serial.println(sensorReading);
+  
+  if(sensorReading == 0) { // 홀센서에 자석이 닿으면
+    digitalWrite(LEDpin, HIGH);                     // LED on
+  } else {
+    digitalWrite(LEDpin, LOW);                     // LED off
+  }
+}
