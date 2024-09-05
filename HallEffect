@@ -1,0 +1,54 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2); // LCD I2C 주소를설정한다. 16칸 2줄LCD 사용
+                                    // 0x27 대신 스캐닝 된 주소를 넣는다.
+
+//홀 센서를A2핀에 연결
+const int hallPin = A2;
+
+// 변수 설정
+int sensorReading;                        // 홀 센서 값을 저장
+int voltage;                            // 전압으로 변환된 값 저장
+
+void setup() {
+  // 9600으로 통신 속도설정
+  Serial.begin(9600);
+
+  // LCD 초기화
+  lcd.init();
+  lcd.backlight();                // 백라이트를켠다. (lcd.noBacklight() 는 백라이트 끈다.)
+
+  Serial.println("sensorReading, Voltage (mv)");      // 시리얼 창에 메세지 출력
+  delay(1000);
+}
+
+void loop()
+{
+  sensorReading = analogRead(hallPin);         // 센서의 아날로그값을 읽어 저장
+  voltage = (int) sensorReading * (5.0 / 1024.0) * 1000; // 아날로그 값을 전압0~5000mV 변환
+
+  /* 일반적인 시리얼 프린트 메세지
+    Serial.print("sensorReading");
+    Serial.println(sensorReading);
+    Serial.print("Voltage:");
+    Serial.print(voltage);
+    Serial.print("mV");
+    Serial.println("---------------------------------------");
+  */
+
+  // 시리얼 모니터에 센서값 출력
+  Serial.print(sensorReading);
+  Serial.print(",");
+  Serial.println(voltage);
+
+  //LCD 창에 메세지 출력
+  lcd.clear();
+  lcd.setCursor(0, 0);                // 첫 번째 줄 첫째 칸
+  lcd.print("Anlaog_V :");
+  lcd.print(sensorReading);
+  lcd.setCursor(0, 1);                // 두 번째 줄 첫째 칸
+  lcd.print(voltage);
+  lcd.print("mV");
+  delay(500);
+}
