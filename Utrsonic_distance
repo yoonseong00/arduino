@@ -1,0 +1,42 @@
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);  // LCD I2C 주소를설정한다. 16칸2줄LCD 사용
+                                    // 0x27 대신 스캐닝 된 주소를 넣는다.
+int trigPin = 2;           // 트리거 2번 핀
+int echoPin = 4;           // 에코 4번 핀
+
+void setup() {
+ 
+  // 초음파 핀모드 설정  
+  pinMode(trigPin, OUTPUT);     // 2번핀에 triger핀연결
+  pinMode(echoPin, INPUT);      // 4번핀에 echo핀 연결
+     
+  // LCD 설정
+  lcd.init();
+  lcd.backlight();                // 백라이트를켠다. (lcd.noBacklight() 는 백라이트 끈다.)
+  lcd.clear();
+}
+
+
+void loop() {
+
+//  초음파 센서로 거리 측정
+
+  float Duration, Distance_cm, Distance_inch;
+  digitalWrite(trigPin, HIGH);                           // 초음파 쏜다.
+  delayMicroseconds(10);                                 // 10마이크로초 동안
+  digitalWrite(trigPin, LOW);                            // 초음파 끈다.
+  Duration = pulseIn(echoPin, HIGH);                     // echo핀이 HIGH 유지한 시간 저장
+  Distance_cm =((float)(340 * Duration) /10000) / 2;       // 거리를 cm로환산
+  lcd.print(Distance_cm, 2);                              // 소수점 2자리까지 cm출력    
+  lcd.print("[cm]");  
+  
+  Distance_inch = Distance_cm * 0.3937;                //   1cm = 0.3937 inch
+  lcd.setCursor(0,1);
+  lcd.print(Distance_inch, 2);                         // 소수점 2자리까지 inch출력
+  lcd.print("[inch]");
+  
+  delay(1000);                      // 안정적으로 값을 읽기 위해 1000밀리초 지연
+  lcd.clear();                      // 글자지우기
+}
