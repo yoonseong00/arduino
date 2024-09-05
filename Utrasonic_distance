@@ -1,0 +1,75 @@
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27,16,2);  // LCD I2C 주소를설정한다. 16칸2줄LCD 사용
+                                    // 0x27 대신 스캐닝 된 주소를 넣는다.
+
+int redPin = 9;           // 빨간 LED 9번에 연결                  
+int greenPin = 10;         // 초록 LED 10번에 연결
+int threshold = 15;        // 거리 임계값 설정
+int trigPin = 2;           // 트리거 2번 핀
+int echoPin = 4;           // 에코 4번 핀
+
+
+void setup() {
+ 
+  // 초음파 핀모드 설정  
+  pinMode(trigPin, OUTPUT);     // 2번핀에 triger핀연결
+  pinMode(echoPin, INPUT);      // 4번핀에 echo핀 연결
+  
+  //LED 출력 설정
+  pinMode(redPin, OUTPUT);      // 9번 핀을 출력으로 설정
+  pinMode(greenPin, OUTPUT);   // 10번 핀을 출력으로 설정  
+  
+  // 시리얼 통신 설정
+  Serial.begin(9600);            // 9600속도로 시리얼 통신 시작
+   
+  // LCD 설정
+  lcd.init();
+  lcd.backlight();                // 백라이트를켠다. (lcd.noBacklight() 는 백라이트 끈다.)
+  lcd.clear();
+}
+
+
+void loop() {
+  //  초음파 센서로 거리 측정
+  float Duration, Distance;
+  digitalWrite(trigPin, HIGH);                       // 초음파 쏜다.
+  delayMicroseconds(10);                            // 10 마이크로초 동안 대기
+  digitalWrite(trigPin, LOW);                       // 초음파 끈다.
+  Duration = pulseIn(echoPin, HIGH);                // echo핀이 HIGH 유지한 시간 저장
+  Distance =((float)(340 * Duration) /10000) /2;     // 거리를 cm로환산
+
+  Serial.print("Duration: ");
+  Serial.println(Duration);
+
+  // 측정한 거리 출력
+  Serial.print(Distance);                     // 시리얼 창에 줄바꿈 없이 거리 출력
+  Serial.println("cm");                       // 단위 출력
+
+  if (Distance < threshold){           // 측정거리가 임계값 미만이면 빨간 LED 켠다.
+    digitalWrite(redPin,HIGH);
+    digitalWrite(greenPin,LOW);     
+    
+    //LCD창에 거리 나타내기
+    lcd.clear();
+    lcd.setCursor(0,0);                 // 첫 번째 줄 첫째 칸
+    lcd.print(Distance,2);              // 측정된 거리 출력    
+    lcd.print("[cm]");                  // 단위출력
+    //lcd.setCursor(0,1);               // 두 번째 줄 첫째 칸
+    //lcd.println(" Occupied");
+  }
+  else {                            //측정값이 임계값보다 크면 초록 LED를 켠다.
+    digitalWrite(redPin,LOW);
+    digitalWrite(greenPin,HIGH);     
+    
+    //LCD창에 거리 나타내기
+    lcd.clear();
+    lcd.setCursor(0,0);             // 첫 번째 줄 첫째 칸
+    lcd.print(Distance,2);          // 측정된 거리 출력    
+    lcd.print("[cm]");              // 단위출력
+    //   lcd.setCursor(0,1);        // 두 번째 줄 첫째 칸
+    //  lcd.println(" Empty");    
+  }
+  delay(1000);                      // 안정적으로 값을 읽기 위해 1000밀리초 지연
+}
