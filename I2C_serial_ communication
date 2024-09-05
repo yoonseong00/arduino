@@ -1,0 +1,33 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2); // LCD I2C 주소를 설정한다. 16칸2줄LCD 사용
+
+int cp = 0; // 커서위치(cursor position)
+
+void setup() {
+  lcd.init();
+  lcd.backlight();                // 백 라이트를 켠다. (lcd.noBacklight() 는 백 라이트 끈다.)
+
+  Serial.begin(9600);                        // 9600 속도로 시리얼 통신 시작
+}
+
+void loop() {
+  if (Serial.available()) {   // 시리얼 통신으로 문자가 도착하면
+    delay(100);                // 전체 메시지가 도착할 때 까지 0.1초동안 기다린다.
+    lcd.clear();               // 화면을 지운다.
+    cp = 0;                   // cp 초기화 
+    while (Serial.available() > 0) { // 문자가 들어오는 동안
+      if(cp > 15) {         // 첫줄 16칸을 넘었다면
+        lcd.setCursor(0,1); // LCD 두번째 줄로 넘어가기
+        cp = 0; // cp 초기화
+      }
+      char c = Serial.read();
+      if((c != -1) && (c != '\n')) {  //Serial.read()로 부터 읽은 것이 없으면 -1을 리턴한다. 
+                                      // 엔터(줄바꿈, '\n')는 출력하지 않는다.
+        lcd.write(c);        // 읽은 문자를 LCD에 써라.
+        cp++;               // cp 값 1 상승
+      }
+    }
+  }
+}
