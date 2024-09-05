@@ -1,0 +1,80 @@
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);  // LCD I2C 주소를설정한다. 16칸2줄LCD 사용
+                                    // 0x27 대신 스캐닝 된 주소를 넣는다.
+
+// 변수 설정
+const int photoresistorPin = A1;  // A1핀에 조도 센서 연결
+const int BUILTin_Led = 13;       // 보정 알림 LED를 13번 핀에 연결
+const int bluePin = 11;           // 센서 값에 따른 밝기표현용  LED를 11번에 연결
+
+int sensorValue = 0;         // 조도 센서 값을 저장
+int sensorMin = 1023;        // 센서 최솟값을 1023으로 설정
+int sensorMax = 0;           // 센서 최댓값을 0으로 설정
+
+
+void setup() {
+  
+  // 보정 알림 LED 출력 설정
+  pinMode(BUILTin_Led, OUTPUT);
+  pinMode(bluePin, OUTPUT); 
+
+  Serial.begin(9600);
+
+  // 센서 값에 따른 밝기표현용  LED 출력 설정
+  digitalWrite(BUILTin_Led, HIGH);
+  digitalWrite(bluePin, LOW);
+  
+  // LCD 설정
+  lcd.init();
+  lcd.backlight();                // 백라이트를켠다. (lcd.noBacklight() 는 백라이트 끈다.)
+  lcd.clear();
+  lcd.setCursor(0,0);                 // 첫 번째 줄 첫째 칸
+  lcd.print("Calibration");              // 메세지 출력
+  lcd.setCursor(0,1);                 // 첫 번째 줄 첫째 칸
+  lcd.print("START");              // 메세지 출력
+  
+ // 센서값 보정
+  while(millis() < 5000) {                     // 5초동안
+    sensorValue = analogRead(photoresistorPin);           //센세 값을 읽어 저장
+
+    if(sensorValue > sensorMax) {                  //센서 값이 최댓값 보다 크면
+      sensorMax = sensorValue;                           // 최댓값으로 재설정
+    }
+
+    if(sensorValue < sensorMin) {                  //센서 값이 최솟값 보다 작으면
+      sensorMin = sensorValue;                           // 최솟값으로 재설정
+    }
+  }
+  
+// 보정 끝.  LED 끄고 LCD 화면에 메세지 출력
+  digitalWrite(BUILTin_Led, LOW);                            
+  
+  lcd.clear();
+  lcd.setCursor(0, 0);                 // 첫 번째 줄 첫째 칸
+  lcd.print("Calibration");              // 메세지 출력
+  lcd.setCursor(0,1);                 // 첫 번째 줄 첫째 칸
+  lcd.print("END");                     // 메세지 출력
+
+  Serial.print("sensorMin: ");
+  Serial.println(sensorMin);
+  Serial.print("sensorMax: ");
+  Serial.println(sensorMax);
+}
+
+
+void loop() {
+
+  sensorValue = analogRead(photoresistorPin);   //아날로그 센서값 읽어 변수에 저장
+
+  // 센서값을 읽어 0~255 값으로 변환
+  sensorValue = map(sensorValue, sensorMin, sensorMax, 0, 255);
+
+  // 센서값이 보정 범위를 벗어나면 제한
+  sensorValue = constrain(sensorValue, 0, 255);
+
+  // 센서값으로 파란색 LED 밝기를 조절
+  analogWrite(bluePin, sensorValue);
+
+}
